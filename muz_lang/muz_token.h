@@ -24,6 +24,7 @@ typedef enum muzTokenIdT_
    MUZ_TOKEN_ID_DOT,        // 17
    MUZ_TOKEN_ID_SEMICOLON,  // 18
    MUZ_TOKEN_ID_ASSIGN,     // 19
+   MUZ_TOKEN_ID_COMMA,      // 20
 } muzTokenIdT;
 
 static char* MuzTokens[] = {
@@ -47,6 +48,7 @@ static char* MuzTokens[] = {
    ".",         // MUZ_TOKEN_ID_DOT
    ";",         // MUZ_TOKEN_ID_SEMICOLON
    "=",         // MUZ_TOKEN_ID_ASSIGN
+   ",",         // MUZ_TOKEN_ID_COMMA
    0,
 };
 
