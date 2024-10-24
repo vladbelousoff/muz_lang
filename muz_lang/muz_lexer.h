@@ -2,13 +2,17 @@
 
 #include "muz_list.h"
 
-typedef struct muzLexerT_
+typedef struct muzLexerStampT_
 {
-   muzListHeadT Tokens;
    unsigned long SourcePosition;
    unsigned long LinePosition;
    unsigned long Line;
-   unsigned long TokenCurrentPosition;
+} muzLexerStampT;
+
+typedef struct muzLexerT_
+{
+   muzListHeadT Tokens;
+   muzLexerStampT Stamp;
 } muzLexerT;
 
 void muzLexer_Init(muzLexerT* Self);

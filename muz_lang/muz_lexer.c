@@ -11,10 +11,9 @@ void
 muzLexer_Init(muzLexerT* Self)
 {
    muzList_Init(&Self->Tokens);
-   Self->Line = 1;
-   Self->SourcePosition = 0;
-   Self->LinePosition = 0;
-   Self->TokenCurrentPosition = 0;
+   Self->Stamp.Line = 1;
+   Self->Stamp.SourcePosition = 0;
+   Self->Stamp.LinePosition = 0;
 }
 
 void
@@ -68,12 +67,12 @@ muzIsServiceSymbol(char Symbol)
 static int
 muzLexer_EatSymbol(muzLexerT* Self, const char* Source)
 {
-   char Symbol = Source[Self->SourcePosition++];
+   char Symbol = Source[Self->Stamp.SourcePosition++];
    if (muzIsEndOfLine(Symbol)) {
-      Self->LinePosition = 0;
-      Self->Line++;
+      Self->Stamp.LinePosition = 0;
+      Self->Stamp.Line++;
    } else {
-      Self->LinePosition++;
+      Self->Stamp.LinePosition++;
    }
 
    return Symbol;
@@ -82,7 +81,7 @@ muzLexer_EatSymbol(muzLexerT* Self, const char* Source)
 static char
 muzLexer_GetSymbol(muzLexerT* Self, const char* Source)
 {
-   return Source[Self->SourcePosition];
+   return Source[Self->Stamp.SourcePosition];
 }
 
 static int
@@ -145,9 +144,7 @@ muzLexer_ProcessDigit(muzLexerT* Self, const char* Source)
    muzTokenT* Token = (muzTokenT*)malloc(sizeof(muzTokenT) + BufferPosition);
    if (Token) {
       memcpy(Token->Buffer, Buffer, BufferPosition);
-      Token->SourcePosition = Self->SourcePosition;
-      Token->LinePosition = Self->LinePosition;
-      Token->Line = Self->Line;
+      Token->Stamp = Self->Stamp;
       if (DotCount == 0) {
          Token->Id = MUZ_TOKEN_ID_INTEGER;
       } else {
@@ -196,9 +193,7 @@ muzLexer_ProcessAlpha(muzLexerT* Self, const char* Source)
    muzTokenT* Token = (muzTokenT*)malloc(sizeof(muzTokenT) + BufferPosition);
    if (Token) {
       memcpy(Token->Buffer, Buffer, BufferPosition);
-      Token->SourcePosition = Self->SourcePosition;
-      Token->LinePosition = Self->LinePosition;
-      Token->Line = Self->Line;
+      Token->Stamp = Self->Stamp;
       Token->Id = MUZ_TOKEN_ID_IDENTIFIER;
 
       muzList_PushBack(&Self->Tokens, &Token->ListEntry);
@@ -237,9 +232,7 @@ muzLexer_ProcessString(muzLexerT* Self, const char* Source)
    muzTokenT* Token = (muzTokenT*)malloc(sizeof(muzTokenT) + BufferPosition);
    if (Token) {
       memcpy(Token->Buffer, Buffer, BufferPosition);
-      Token->SourcePosition = Self->SourcePosition;
-      Token->LinePosition = Self->LinePosition;
-      Token->Line = Self->Line;
+      Token->Stamp = Self->Stamp;
       Token->Id = MUZ_TOKEN_ID_STRING;
 
       muzList_PushBack(&Self->Tokens, &Token->ListEntry);
@@ -295,9 +288,7 @@ muzLexer_ProcessOperator(muzLexerT* Self, const char* Source)
    muzTokenT* Token = (muzTokenT*)malloc(sizeof(muzTokenT));
    if (Token) {
       Token->Id = TokenId;
-      Token->SourcePosition = Self->SourcePosition;
-      Token->LinePosition = Self->LinePosition;
-      Token->Line = Self->Line;
+      Token->Stamp = Self->Stamp;
 
       muzList_PushBack(&Self->Tokens, &Token->ListEntry);
       MuzLogD("Adding token (type: '%s')", MuzTokens[Token->Id]);
@@ -354,7 +345,7 @@ typedef int (*muzSymbolProcessorT)(muzLexerT*, const char*);
 static int
 muzLexer_ProcessUnknownSymbol(muzLexerT* Self, const char* Source)
 {
-   MuzLogE("Unknown symbol '%c', line: %lu", muzLexer_GetSymbol(Self, Source), Self->Line);
+   MuzLogE("Unknown symbol '%c', line: %lu, column: %lu", muzLexer_GetSymbol(Self, Source), Self->Stamp.Line, Self->Stamp.LinePosition);
    return -1;
 }
 

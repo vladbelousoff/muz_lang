@@ -54,8 +54,6 @@ typedef struct muzTokenT
 {
    muzListEntryT ListEntry;
    muzTokenIdT Id;
-   unsigned long Line;
-   unsigned long LinePosition;
-   unsigned long SourcePosition;
+   muzLexerStampT Stamp;
    char Buffer[0];
 } muzTokenT;
