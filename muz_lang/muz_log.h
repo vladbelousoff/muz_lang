@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -9,9 +10,15 @@
 #define MUZ_SEPARATOR '/'
 #endif
 
-#define MUZ_FILENAME                               ((char*)(strrchr(__FILE__, MUZ_SEPARATOR) + 1))
+typedef struct muzLoggerContextT_
+{
+   int (*FormatPrint)(const char* const Format, ...);
+} muzLoggerContextT;
 
-#define LogPrint_(lvl, file, line, func, fmt, ...) printf("[%s] %s:%u (%s) " fmt "\n", lvl, file, line, func, ##__VA_ARGS__)
+static muzLoggerContextT MuzLoggerContext = { printf };
+
+#define MUZ_FILENAME                                    ((char*)(strrchr(__FILE__, MUZ_SEPARATOR) + 1))
+#define MUZ_LOG_PRINTF(lvl, file, line, func, fmt, ...) MuzLoggerContext.FormatPrint("[%s] %s:%u (%s) " fmt "\n", lvl, file, line, func, ##__VA_ARGS__)
 
 #if MUZ_DEBUG_LEVEL >= 4
 #define MuzLogI printf
@@ -22,7 +29,7 @@
 #endif
 
 #if MUZ_DEBUG_LEVEL >= 3
-#define MuzLogD(_fmt, ...) LogPrint_("D", MUZ_FILENAME, __LINE__, __FUNCTION__, _fmt, ##__VA_ARGS__)
+#define MuzLogD(_fmt, ...) MUZ_LOG_PRINTF("D", MUZ_FILENAME, __LINE__, __FUNCTION__, _fmt, ##__VA_ARGS__)
 #else
 #define MuzLogD(_fmt, ...)                                                                                                                                                         \
    do {                                                                                                                                                                            \
@@ -30,7 +37,7 @@
 #endif
 
 #if MUZ_DEBUG_LEVEL >= 2
-#define MuzLogW(_fmt, ...) LogPrint_("W", MUZ_FILENAME, __LINE__, __FUNCTION__, _fmt, ##__VA_ARGS__)
+#define MuzLogW(_fmt, ...) MUZ_LOG_PRINTF("W", MUZ_FILENAME, __LINE__, __FUNCTION__, _fmt, ##__VA_ARGS__)
 #else
 #define MuzLogW(_fmt, ...)                                                                                                                                                         \
    do {                                                                                                                                                                            \
@@ -38,7 +45,7 @@
 #endif
 
 #if MUZ_DEBUG_LEVEL >= 1
-#define MuzLogE(_fmt, ...) LogPrint_("E", MUZ_FILENAME, __LINE__, __FUNCTION__, _fmt, ##__VA_ARGS__)
+#define MuzLogE(_fmt, ...) MUZ_LOG_PRINTF("E", MUZ_FILENAME, __LINE__, __FUNCTION__, _fmt, ##__VA_ARGS__)
 #else
 #define MuzLogE(_fmt, ...)                                                                                                                                                         \
    do {                                                                                                                                                                            \
