@@ -61,7 +61,7 @@ muzIsQuote(char Symbol)
 static int
 muzIsServiceSymbol(char Symbol)
 {
-   return strchr("~!@#$%^&*/%()-+=.;,", Symbol) != NULL;
+   return strchr("~!@#$%^&*/%(){}-+=.;,>", Symbol) != NULL;
 }
 
 static int
@@ -271,6 +271,12 @@ muzLexer_ProcessOperator(muzLexerT* Self, const char* Source)
          break;
       case ')':
          TokenId = MUZ_TOKEN_ID_RPAREN;
+         break;
+      case '{':
+         TokenId = MUZ_TOKEN_ID_LBRACE;
+         break;
+      case '}':
+         TokenId = MUZ_TOKEN_ID_RBRACE;
          break;
       case '.':
          TokenId = MUZ_TOKEN_ID_DOT;
