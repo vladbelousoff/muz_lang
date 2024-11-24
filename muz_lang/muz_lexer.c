@@ -4,7 +4,11 @@
 #include "muz_log.h"
 #include "muz_token.h"
 
+#ifdef __APPLE__
+#include <malloc/malloc.h>
+#else
 #include <malloc.h>
+#endif
 #include <stdlib.h>
 
 void
@@ -94,7 +98,7 @@ muzLexer_ProcessDigit(muzLexerT* Self, const char* Source)
    memset(Buffer, 0, MUZ_TOKEN_ID_MAX_LENGTH);
 
    for (;; muzLexer_EatSymbol(Self, Source)) {
-      char Symbol = muzLexer_GetSymbol(Self, Source);
+      const char Symbol = muzLexer_GetSymbol(Self, Source);
 
       if (muzIsWhitespace(Symbol)) {
          BufferPosition++;
