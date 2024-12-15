@@ -1,68 +1,66 @@
 #pragma once
 
-#define muzListRecord(Address, Type, Field)      ((Type*)((char*)(Address) - (char*)(&((Type*)0)->Field)))
-#define muzListForEach(Position, Head)           for (Position = (Head)->Next; Position != Head; Position = Position->Next)
-#define muzListForEachSafe(Position, Safe, Head) for (Position = (Head)->Next, Safe = Position->Next; Position != (Head); Position = Safe, Safe = Position->Next)
+#define muz_list_record(address, type, field)         ((type*)((char*)(address) - (char*)(&((type*)0)->field)))
+#define muz_list_for_each(position, head)             for (position = (head)->next; position != head; position = position->next)
+#define muz_list_for_each_safe(position, Safe, head)  for (position = (head)->next, Safe = position->next; position != (head); position = Safe, Safe = position->next)
 
-typedef struct muzListEntryT_ {
-   struct muzListEntryT_ *Prev;
-   struct muzListEntryT_ *Next;
-} muzListEntryT;
-
-typedef muzListEntryT muzListHeadT;
+struct muz_list_entry {
+   struct muz_list_entry *prev;
+   struct muz_list_entry *next;
+};
 
 static void
-muzList_Init(muzListHeadT *Self) {
-   Self->Prev = (muzListEntryT *)Self;
-   Self->Next = (muzListEntryT *)Self;
+muz_list_init(struct muz_list_entry *self) {
+   self->prev = self;
+   self->next = self;
 }
 
 static void
-muzList_Term(muzListHeadT *Self) {
-   Self->Prev = (muzListEntryT *)0;
-   Self->Next = (muzListEntryT *)0;
+muz_list_term(struct muz_list_entry *self) {
+   self->prev = (struct muz_list_entry *)0;
+   self->next = (struct muz_list_entry *)0;
 }
 
 static int
-muzList_IsEmpty(muzListHeadT *Head) {
-   return Head->Next == Head;
+muz_list_is_empty(const struct muz_list_entry *head) {
+   return head->next == head;
 }
 
 static void
-muzList_Add_(muzListEntryT *New, muzListEntryT *Prev, muzListEntryT *Next) {
-   Next->Prev = New;
-   New->Next = Next;
-   New->Prev = Prev;
-   Prev->Next = New;
+muz_list_add_(struct muz_list_entry *new_, struct muz_list_entry *prev, struct muz_list_entry *next) {
+   next->prev = new_;
+   new_->next = next;
+   new_->prev = prev;
+   prev->next = new_;
 }
 
 static void
-muzList_PushFront(muzListHeadT *Head, muzListEntryT *Entry) {
-   muzList_Add_(Entry, (muzListEntryT *)Head, Head->Next);
+muz_list_push_front(struct muz_list_entry *head, struct muz_list_entry *entry) {
+   muz_list_add_(entry, head, head->next);
 }
 
 static void
-muzList_PushBack(muzListHeadT *Head, muzListEntryT *Entry) {
-   muzList_Add_(Entry, Head->Prev, (muzListEntryT *)Head);
+muz_list_push_back(struct muz_list_entry *head, struct muz_list_entry *entry) {
+   muz_list_add_(entry, head->prev, head);
 }
 
-static muzListEntryT *
-muzList_GetFront(const muzListHeadT *Head) {
-   muzListEntryT *Entry = Head->Next;
-   if (Entry != Head) {
-      return Entry;
+static struct muz_list_entry *
+muz_list_get_front(const struct muz_list_entry *head) {
+   struct muz_list_entry *entry = head->next;
+   if (entry != head) {
+      return entry;
    }
 
    return 0;
 }
 
 static void
-muzList_Remove_(muzListEntryT *Prev, muzListEntryT *Next) {
-   Next->Prev = Prev;
-   Prev->Next = Next;
+muz_list_remove_(struct muz_list_entry *prev, struct muz_list_entry *next) {
+   next->prev = prev;
+   prev->next = next;
 }
 
 static void
-muzList_Remove(const muzListEntryT *entry) {
-   muzList_Remove_(entry->Prev, entry->Next);
+muz_list_remove(const struct muz_list_entry *entry) {
+   muz_list_remove_(entry->prev, entry->next);
 }

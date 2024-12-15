@@ -2,7 +2,7 @@
 
 #define MUZ_TOKEN_ID_MAX_LENGTH 128
 
-typedef enum muzTokenIdT_ {
+enum muz_token_id {
    MUZ_TOKEN_ID_UNKNOWN, // 0
    MUZ_TOKEN_ID_FUNCTION, // 1
    MUZ_TOKEN_ID_LBRACE, // 2
@@ -24,9 +24,9 @@ typedef enum muzTokenIdT_ {
    MUZ_TOKEN_ID_SEMICOLON, // 18
    MUZ_TOKEN_ID_ASSIGN, // 19
    MUZ_TOKEN_ID_COMMA, // 20
-} muzTokenIdT;
+};
 
-static char *MuzTokens[] = {
+static char *muz_tokens[] = {
    "<unknown>", // MUZ_TOKEN_ID_UNKNOWN
    "function", // MUZ_TOKEN_ID_FUNCTION
    "{", // MUZ_TOKEN_ID_LBRACE
@@ -51,9 +51,9 @@ static char *MuzTokens[] = {
    0,
 };
 
-typedef struct muzTokenT {
-   muzListEntryT ListEntry;
-   muzTokenIdT Id;
-   muzLexerStampT Stamp;
-   char Buffer[0];
-} muzTokenT;
+struct muz_token {
+   struct muz_list_entry list_entry;
+   enum muz_token_id id;
+   muzLexerStampT lexer_stamp;
+   char buffer[0];
+};

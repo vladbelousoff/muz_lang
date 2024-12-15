@@ -9,11 +9,11 @@ typedef struct muzLexerStampT_ {
 } muzLexerStampT;
 
 typedef struct muzLexerT_ {
-   muzListHeadT Tokens;
+   struct muz_list_entry Tokens;
    muzLexerStampT Stamp;
 } muzLexerT;
 
-void muzLexer_Init(muzLexerT *Self);
-void muzLexer_Term(muzLexerT *Self);
+void muzLexer_Init(muzLexerT *self);
+void muzLexer_Term(muzLexerT *self);
 
-void muzLexer_Tokenize(muzLexerT *Self, const char *Source);
+void muzLexer_Tokenize(muzLexerT *self, const char *Source);
