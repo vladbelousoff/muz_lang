@@ -10,12 +10,11 @@
 #define MUZ_SEPARATOR '/'
 #endif
 
-typedef struct muzLoggerContextT_
-{
-   int (*FormatPrint)(const char* const Format, ...);
+typedef struct muzLoggerContextT_ {
+   int (*FormatPrint)(const char *const Format, ...);
 } muzLoggerContextT;
 
-static muzLoggerContextT MuzLoggerContext = { printf };
+static muzLoggerContextT MuzLoggerContext = {printf};
 
 #define MUZ_FILENAME                                    ((char*)(strrchr(__FILE__, MUZ_SEPARATOR) + 1))
 #define MUZ_LOG_PRINTF(lvl, file, line, func, fmt, ...) MuzLoggerContext.FormatPrint("[%s] %s:%u (%s) " fmt "\n", lvl, file, line, func, ##__VA_ARGS__)

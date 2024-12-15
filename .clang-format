@@ -28,7 +28,7 @@ BreakInheritanceList: BeforeComma
 BreakStringLiterals: true
 ColumnLimit: 180
 CompactNamespaces: false
-ContinuationIndentWidth: 4
+ContinuationIndentWidth: 2
 Cpp11BracedListStyle: false
 EmptyLineAfterAccessModifier: Never
 EmptyLineBeforeAccessModifier: LogicalBlock
@@ -75,7 +75,7 @@ SpacesInAngles: Never
 SpacesInContainerLiterals: false
 SpacesInSquareBrackets: false
 Standard: Latest
-TabWidth: 4
+TabWidth: 2
 UseTab: Never
-IndentWidth: 3
+IndentWidth: 2
 ...
