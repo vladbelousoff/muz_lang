@@ -56,6 +56,6 @@ struct muz_token
 {
   struct muz_list_entry list_entry;
   enum muz_token_id id;
-  muzLexerStampT lexer_stamp;
+  struct muz_lexer_stamp lexer_stamp;
   char buffer[0];
 };

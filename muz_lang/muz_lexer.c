@@ -12,150 +12,150 @@
 #include <stdlib.h>
 
 void
-muzLexer_Init(muzLexerT* self)
+muz_lexer_init(muzLexerT* self)
 {
-  muz_list_init(&self->Tokens);
-  self->Stamp.Line = 1;
-  self->Stamp.SourcePosition = 0;
-  self->Stamp.LinePosition = 0;
+  muz_list_init(&self->tokens);
+  self->lexer_stamp.line = 1;
+  self->lexer_stamp.source_position = 0;
+  self->lexer_stamp.line_position = 0;
 }
 
 void
-muzLexer_Term(muzLexerT* self)
+muz_lexer_term(muzLexerT* self)
 {
-  muz_list_term(&self->Tokens);
+  muz_list_term(&self->tokens);
 }
 
 static int
-muzIsEndOfLine(char Symbol)
+muz_is_end_of_line(char symbol)
 {
-  return Symbol == '\n';
+  return symbol == '\n';
 }
 
 static int
-muzIsSpace(char Symbol)
+muz_is_space(char symbol)
 {
-  return Symbol == ' ';
+  return symbol == ' ';
 }
 
 static int
-muzIsWhitespace(char Symbol)
+muz_is_whitespace(char symbol)
 {
-  return muzIsSpace(Symbol) || muzIsEndOfLine(Symbol) || Symbol == '\t' || Symbol == '\r';
+  return muz_is_space(symbol) || muz_is_end_of_line(symbol) || symbol == '\t' || symbol == '\r';
 }
 
 static int
-muzIsAlpha(char Symbol)
+muz_is_alpha(char symbol)
 {
-  return Symbol >= 'A' && Symbol <= 'z';
+  return symbol >= 'A' && symbol <= 'z';
 }
 
 static int
-muzIsDigit(char Symbol)
+muz_is_digit(char symbol)
 {
-  return Symbol >= '0' && Symbol <= '9';
+  return symbol >= '0' && symbol <= '9';
 }
 
 static int
-muzIsQuote(char Symbol)
+muz_is_quote(char symbol)
 {
-  return Symbol == '\'';
+  return symbol == '\'';
 }
 
 static int
-muzIsServiceSymbol(char Symbol)
+muz_is_service_symbol(char symbol)
 {
-  return strchr("~!@#$%^&*/%(){}-+=.;,>", Symbol) != NULL;
+  return strchr("~!@#$%^&*/%(){}-+=.;,>", symbol) != NULL;
 }
 
 static int
-muzLexer_EatSymbol(muzLexerT* self, const char* Source)
+muz_lexer_eat_symbol(muzLexerT* self, const char* source)
 {
-  const char Symbol = Source[self->Stamp.SourcePosition++];
-  if (muzIsEndOfLine(Symbol)) {
-    self->Stamp.LinePosition = 0;
-    self->Stamp.Line++;
+  const char symbol = source[self->lexer_stamp.source_position++];
+  if (muz_is_end_of_line(symbol)) {
+    self->lexer_stamp.line_position = 0;
+    self->lexer_stamp.line++;
   } else {
-    self->Stamp.LinePosition++;
+    self->lexer_stamp.line_position++;
   }
 
-  return Symbol;
+  return symbol;
 }
 
 static char
-muzLexer_GetSymbol(const muzLexerT* self, const char* Source)
+muz_lexer_get_symbol(const muzLexerT* self, const char* source)
 {
-  return Source[self->Stamp.SourcePosition];
+  return source[self->lexer_stamp.source_position];
 }
 
 static int
-muzLexer_ProcessDigit(muzLexerT* self, const char* Source)
+muz_lexer_process_digit(muzLexerT* self, const char* source)
 {
-  unsigned long BufferPosition = 0;
-  unsigned long DotCount = 0;
+  unsigned long buffer_position = 0;
+  unsigned long dot_count = 0;
 
-  char Buffer[MUZ_TOKEN_ID_MAX_LENGTH] = { 0 };
+  char buffer[MUZ_TOKEN_ID_MAX_LENGTH] = { 0 };
 
-  for (;; muzLexer_EatSymbol(self, Source)) {
-    const char Symbol = muzLexer_GetSymbol(self, Source);
+  for (;; muz_lexer_eat_symbol(self, source)) {
+    const char symbol = muz_lexer_get_symbol(self, source);
 
-    if (muzIsWhitespace(Symbol)) {
-      BufferPosition++;
+    if (muz_is_whitespace(symbol)) {
+      buffer_position++;
       break;
     }
 
-    if (muzIsEndOfLine(Symbol)) {
-      BufferPosition++;
+    if (muz_is_end_of_line(symbol)) {
+      buffer_position++;
       break;
     }
 
-    if (Symbol == '_') {
-      Buffer[BufferPosition++] = Symbol;
+    if (symbol == '_') {
+      buffer[buffer_position++] = symbol;
       continue;
     }
 
-    if (Symbol == '-') {
-      if (BufferPosition != 0) {
+    if (symbol == '-') {
+      if (buffer_position != 0) {
         return -1;
       }
-      Buffer[BufferPosition++] = Symbol;
+      buffer[buffer_position++] = symbol;
       continue;
     }
 
-    if (Symbol == '.') {
-      if (DotCount == 1) {
+    if (symbol == '.') {
+      if (dot_count == 1) {
         return -1;
       }
-      Buffer[BufferPosition++] = Symbol;
-      DotCount++;
+      buffer[buffer_position++] = symbol;
+      dot_count++;
       continue;
     }
 
-    if (muzIsDigit(Symbol)) {
-      Buffer[BufferPosition++] = Symbol;
+    if (muz_is_digit(symbol)) {
+      buffer[buffer_position++] = symbol;
       continue;
     }
 
-    if (Symbol == 0) {
-      BufferPosition++;
+    if (symbol == 0) {
+      buffer_position++;
       break;
     }
 
     break;
   }
 
-  struct muz_token* Token = (struct muz_token*)malloc(sizeof(struct muz_token) + BufferPosition);
-  if (Token) {
-    memcpy(Token->buffer, Buffer, BufferPosition);
-    Token->lexer_stamp = self->Stamp;
-    if (DotCount == 0) {
-      Token->id = MUZ_TOKEN_ID_INTEGER;
+  struct muz_token* token = (struct muz_token*)malloc(sizeof(struct muz_token) + buffer_position);
+  if (token) {
+    memcpy(token->buffer, buffer, buffer_position);
+    token->lexer_stamp = self->lexer_stamp;
+    if (dot_count == 0) {
+      token->id = MUZ_TOKEN_ID_INTEGER;
     } else {
-      Token->id = MUZ_TOKEN_ID_REAL;
+      token->id = MUZ_TOKEN_ID_REAL;
     }
 
-    muz_list_push_back(&self->Tokens, &Token->list_entry);
-    MuzLogD("Adding token (type: '%s', value: '%s')", muz_tokens[Token->id], Buffer);
+    muz_list_push_back(&self->tokens, &token->list_entry);
+    muz_log_debug("Adding token (type: '%s', value: '%s')", muz_tokens[token->id], buffer);
 
     return 0;
   }
@@ -164,42 +164,42 @@ muzLexer_ProcessDigit(muzLexerT* self, const char* Source)
 }
 
 static int
-muzLexer_ProcessAlpha(muzLexerT* self, const char* Source)
+muz_lexer_process_alpha(muzLexerT* self, const char* source)
 {
-  unsigned long BufferPosition = 0;
+  unsigned long buffer_position = 0;
 
-  char Buffer[MUZ_TOKEN_ID_MAX_LENGTH] = { 0 };
+  char buffer[MUZ_TOKEN_ID_MAX_LENGTH] = { 0 };
 
-  for (;; muzLexer_EatSymbol(self, Source)) {
-    const char Symbol = muzLexer_GetSymbol(self, Source);
+  for (;; muz_lexer_eat_symbol(self, source)) {
+    const char symbol = muz_lexer_get_symbol(self, source);
 
-    if (Symbol == '_' || muzIsAlpha(Symbol)) {
-      Buffer[BufferPosition++] = Symbol;
+    if (symbol == '_' || muz_is_alpha(symbol)) {
+      buffer[buffer_position++] = symbol;
       continue;
     }
 
-    if (muzIsWhitespace(Symbol)) {
-      BufferPosition++;
+    if (muz_is_whitespace(symbol)) {
+      buffer_position++;
       break;
     }
 
-    if (Symbol == 0) {
-      BufferPosition++;
+    if (symbol == 0) {
+      buffer_position++;
       break;
     }
 
-    BufferPosition++;
+    buffer_position++;
     break;
   }
 
-  struct muz_token* Token = (struct muz_token*)malloc(sizeof(struct muz_token) + BufferPosition);
-  if (Token) {
-    memcpy(Token->buffer, Buffer, BufferPosition);
-    Token->lexer_stamp = self->Stamp;
-    Token->id = MUZ_TOKEN_ID_IDENTIFIER;
+  struct muz_token* token = (struct muz_token*)malloc(sizeof(struct muz_token) + buffer_position);
+  if (token) {
+    memcpy(token->buffer, buffer, buffer_position);
+    token->lexer_stamp = self->lexer_stamp;
+    token->id = MUZ_TOKEN_ID_IDENTIFIER;
 
-    muz_list_push_back(&self->Tokens, &Token->list_entry);
-    MuzLogD("Adding token (type: '%s', value: '%s')", muz_tokens[Token->id], Buffer);
+    muz_list_push_back(&self->tokens, &token->list_entry);
+    muz_log_debug("Adding token (type: '%s', value: '%s')", muz_tokens[token->id], buffer);
 
     return 0;
   }
@@ -208,36 +208,36 @@ muzLexer_ProcessAlpha(muzLexerT* self, const char* Source)
 }
 
 static int
-muzLexer_ProcessString(muzLexerT* self, const char* Source)
+muz_lexer_process_string(muzLexerT* self, const char* source)
 {
-  unsigned long BufferPosition = 0;
+  unsigned long buffer_position = 0;
 
-  char Buffer[MUZ_TOKEN_ID_MAX_LENGTH] = { 0 };
+  char buffer[MUZ_TOKEN_ID_MAX_LENGTH] = { 0 };
 
-  muzLexer_EatSymbol(self, Source);
+  muz_lexer_eat_symbol(self, source);
   for (;;) {
-    const char Symbol = (char)muzLexer_EatSymbol(self, Source);
+    const char symbol = (char)muz_lexer_eat_symbol(self, source);
 
-    if (muzIsQuote(Symbol)) {
-      BufferPosition++;
+    if (muz_is_quote(symbol)) {
+      buffer_position++;
       break;
     }
 
-    if (Symbol == 0) {
+    if (symbol == 0) {
       return -1;
     }
 
-    Buffer[BufferPosition++] = Symbol;
+    buffer[buffer_position++] = symbol;
   }
 
-  struct muz_token* Token = (struct muz_token*)malloc(sizeof(struct muz_token) + BufferPosition);
-  if (Token) {
-    memcpy(Token->buffer, Buffer, BufferPosition);
-    Token->lexer_stamp = self->Stamp;
-    Token->id = MUZ_TOKEN_ID_STRING;
+  struct muz_token* token = (struct muz_token*)malloc(sizeof(struct muz_token) + buffer_position);
+  if (token) {
+    memcpy(token->buffer, buffer, buffer_position);
+    token->lexer_stamp = self->lexer_stamp;
+    token->id = MUZ_TOKEN_ID_STRING;
 
-    muz_list_push_back(&self->Tokens, &Token->list_entry);
-    MuzLogD("Adding token (type: '%s', value: '%s')", muz_tokens[Token->id], Buffer);
+    muz_list_push_back(&self->tokens, &token->list_entry);
+    muz_log_debug("Adding token (type: '%s', value: '%s')", muz_tokens[token->id], buffer);
 
     return 0;
   }
@@ -246,62 +246,62 @@ muzLexer_ProcessString(muzLexerT* self, const char* Source)
 }
 
 static int
-muzLexer_ProcessOperator(muzLexerT* self, const char* Source)
+muz_lexer_process_operator(muzLexerT* self, const char* source)
 {
-  enum muz_token_id TokenId;
+  enum muz_token_id token_id;
 
-  const char Symbol = (char)muzLexer_EatSymbol(self, Source);
-  switch (Symbol) {
+  const char symbol = (char)muz_lexer_eat_symbol(self, source);
+  switch (symbol) {
     case '*':
-      TokenId = MUZ_TOKEN_ID_MUL;
+      token_id = MUZ_TOKEN_ID_MUL;
       break;
     case '/':
-      TokenId = MUZ_TOKEN_ID_DIV;
+      token_id = MUZ_TOKEN_ID_DIV;
       break;
     case '%':
-      TokenId = MUZ_TOKEN_ID_MOD;
+      token_id = MUZ_TOKEN_ID_MOD;
       break;
     case '+':
-      TokenId = MUZ_TOKEN_ID_ADD;
+      token_id = MUZ_TOKEN_ID_ADD;
       break;
     case '-':
-      TokenId = MUZ_TOKEN_ID_SUB;
+      token_id = MUZ_TOKEN_ID_SUB;
       break;
     case '(':
-      TokenId = MUZ_TOKEN_ID_LPAREN;
+      token_id = MUZ_TOKEN_ID_LPAREN;
       break;
     case ')':
-      TokenId = MUZ_TOKEN_ID_RPAREN;
+      token_id = MUZ_TOKEN_ID_RPAREN;
       break;
     case '{':
-      TokenId = MUZ_TOKEN_ID_LBRACE;
+      token_id = MUZ_TOKEN_ID_LBRACE;
       break;
     case '}':
-      TokenId = MUZ_TOKEN_ID_RBRACE;
+      token_id = MUZ_TOKEN_ID_RBRACE;
       break;
     case '.':
-      TokenId = MUZ_TOKEN_ID_DOT;
+      token_id = MUZ_TOKEN_ID_DOT;
       break;
     case ';':
-      TokenId = MUZ_TOKEN_ID_SEMICOLON;
+      token_id = MUZ_TOKEN_ID_SEMICOLON;
       break;
     case '=':
-      TokenId = MUZ_TOKEN_ID_ASSIGN;
+      token_id = MUZ_TOKEN_ID_ASSIGN;
       break;
     case ',':
-      TokenId = MUZ_TOKEN_ID_COMMA;
+      token_id = MUZ_TOKEN_ID_COMMA;
       break;
     default:
       return -1;
   }
 
-  struct muz_token* Token = malloc(sizeof(struct muz_token));
-  if (Token) {
-    Token->id = TokenId;
-    Token->lexer_stamp = self->Stamp;
+  struct muz_token* token = malloc(sizeof(struct muz_token));
+  if (token) {
+    token->id = token_id;
+    token->lexer_stamp = self->lexer_stamp;
 
-    muz_list_push_back(&self->Tokens, &Token->list_entry);
-    MuzLogD("Adding token (type: '%s')", muz_tokens[Token->id]);
+    muz_list_push_back(&self->tokens, &token->list_entry);
+    muz_log_debug("Adding token (type: '%s')", muz_tokens[token->id]);
 
     return 0;
   }
@@ -309,7 +309,7 @@ muzLexer_ProcessOperator(muzLexerT* self, const char* Source)
   return -1;
 }
 
-typedef enum muzSymbolT_
+enum muz_symbol
 {
   MUZ_SYMBOL_UNKNOWN,
   MUZ_SYMBOL_SPACE,
@@ -318,71 +318,71 @@ typedef enum muzSymbolT_
   MUZ_SYMBOL_ALPHA,
   MUZ_SYMBOL_QUOTE,
   MUZ_SYMBOL_SERVICE,
-} muzSymbolT;
+};
 
-static muzSymbolT
-muzGetSymbolType(char Symbol)
+static enum muz_symbol
+muz_get_symbol_type(char symbol)
 {
-  if (muzIsEndOfLine(Symbol)) {
+  if (muz_is_end_of_line(symbol)) {
     return MUZ_SYMBOL_NEWLINE;
   }
 
-  if (muzIsWhitespace(Symbol)) {
+  if (muz_is_whitespace(symbol)) {
     return MUZ_SYMBOL_SPACE;
   }
 
-  if (muzIsAlpha(Symbol)) {
+  if (muz_is_alpha(symbol)) {
     return MUZ_SYMBOL_ALPHA;
   }
 
-  if (muzIsDigit(Symbol)) {
+  if (muz_is_digit(symbol)) {
     return MUZ_SYMBOL_DIGIT;
   }
 
-  if (muzIsServiceSymbol(Symbol)) {
+  if (muz_is_service_symbol(symbol)) {
     return MUZ_SYMBOL_SERVICE;
   }
 
-  if (muzIsQuote(Symbol)) {
+  if (muz_is_quote(symbol)) {
     return MUZ_SYMBOL_QUOTE;
   }
 
   return MUZ_SYMBOL_UNKNOWN;
 }
 
-typedef int (*muzSymbolProcessorT)(muzLexerT*, const char*);
+typedef int (*muz_symbol_processor_func)(muzLexerT*, const char*);
 
 static int
-muzLexer_ProcessUnknownSymbol(const muzLexerT* self, const char* Source)
+muz_lexer_process_unknown_symbol(const muzLexerT* self, const char* source)
 {
-  MuzLogE("Unknown symbol '%c', line: %lu, column: %lu", muzLexer_GetSymbol(self, Source), self->Stamp.Line, self->Stamp.LinePosition);
+  muz_log_error("Unknown symbol '%c', line: %lu, column: %lu", muz_lexer_get_symbol(self, source), self->lexer_stamp.line, self->lexer_stamp.line_position);
   return -1;
 }
 
-static muzSymbolProcessorT SymbolProcessors[] = {
-  muzLexer_ProcessUnknownSymbol, // MUZ_SYMBOL_UNKNOWN
-  muzLexer_EatSymbol,            // MUZ_SYMBOL_SPACE
-  muzLexer_EatSymbol,            // MUZ_SYMBOL_NEWLINE
-  muzLexer_ProcessDigit,         // MUZ_SYMBOL_DIGIT
-  muzLexer_ProcessAlpha,         // MUZ_SYMBOL_ALPHA
-  muzLexer_ProcessString,        // MUZ_SYMBOL_QUOTE
-  muzLexer_ProcessOperator,      // MUZ_SYMBOL_SERVICE
+static muz_symbol_processor_func symbol_processors[] = {
+  muz_lexer_process_unknown_symbol, // MUZ_SYMBOL_UNKNOWN
+  muz_lexer_eat_symbol,             // MUZ_SYMBOL_SPACE
+  muz_lexer_eat_symbol,             // MUZ_SYMBOL_NEWLINE
+  muz_lexer_process_digit,          // MUZ_SYMBOL_DIGIT
+  muz_lexer_process_alpha,          // MUZ_SYMBOL_ALPHA
+  muz_lexer_process_string,         // MUZ_SYMBOL_QUOTE
+  muz_lexer_process_operator,       // MUZ_SYMBOL_SERVICE
 };
 
 static int
-muzLexer_ProcessSymbol(muzLexerT* self, const char* Source)
+muz_lexer_process_symbol(muzLexerT* self, const char* source)
 {
-  char Symbol = muzLexer_GetSymbol(self, Source);
-  muzSymbolT SymbolType = muzGetSymbolType(Symbol);
-  muzSymbolProcessorT SymbolProcessor = SymbolProcessors[SymbolType];
-  return SymbolProcessor(self, Source);
+  const char symbol = muz_lexer_get_symbol(self, source);
+  const enum muz_symbol symbol_type = muz_get_symbol_type(symbol);
+  const muz_symbol_processor_func symbol_processor = symbol_processors[symbol_type];
+  return symbol_processor(self, source);
 }
 
 void
-muzLexer_Tokenize(muzLexerT* self, const char* Source)
+muz_lexer_tokenize(muzLexerT* self, const char* source)
 {
-  while (muzLexer_GetSymbol(self, Source) != 0) {
-    if (muzLexer_ProcessSymbol(self, Source) == -1) {
+  while (muz_lexer_get_symbol(self, source) != 0) {
+    if (muz_lexer_process_symbol(self, source) == -1) {
       exit(-1);
     }
   }
